@@ -1,6 +1,7 @@
 const _0x4a2b = (() => {
     let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f, _0x20;
     let isIframePlayer = false;
+    let lastStateUpdate = 0;
 
     const _0x5e8a = () => {
         return 'user_' + Math.random().toString(36).substring(2, 15);
@@ -11,6 +12,31 @@ const _0x4a2b = (() => {
     };
 
     _0x1f = _0x5e8a();
+
+    const createNameChangeModal = () => {
+        const modalHTML = `
+            <div id="nameChangeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
+                <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95)); padding: 40px; border-radius: 20px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: modalSlide 0.3s ease;">
+                    <h2 style="color: white; margin-bottom: 20px; font-size: 1.5em; text-align: center;">İsim Değiştir</h2>
+                    <input type="text" id="newNameInput" placeholder="Yeni ismini gir..." style="width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; font-size: 16px; background: rgba(255,255,255,0.1); color: white; margin-bottom: 20px;" maxlength="20">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="_0x4a2b.cancelNameChange()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">İptal</button>
+                        <button onclick="_0x4a2b.confirmNameChange()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Değiştir</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes modalSlide {
+                from { opacity: 0; transform: scale(0.8); }
+                to { opacity: 1; transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    };
 
     const _0x3b9c = () => {
         try {
@@ -61,7 +87,6 @@ const _0x4a2b = (() => {
     const updateControlButtons = () => {
         const controlsDiv = document.querySelector('.controls');
         
-        // Herkes için sadece çık ve isim değiştir butonları
         controlsDiv.innerHTML = `
             <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
             <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
@@ -69,7 +94,6 @@ const _0x4a2b = (() => {
     };
 
     const addVideoBlocker = () => {
-        // Host değilse video üzerine görünmez bir katman ekle
         if (!_0x1c) {
             const blocker = document.createElement('div');
             blocker.id = 'videoBlocker';
@@ -200,7 +224,7 @@ const _0x4a2b = (() => {
 
         _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).onDisconnect().remove();
 
-        _0xd29e(_0x1e + ' odaya giriş yaptı.');
+        _0xd29e(_0x1e + ' hoşgeldin');
     };
 
     const _0x9f6a = (_0x6a) => {
@@ -236,7 +260,6 @@ const _0x4a2b = (() => {
                 }
             });
 
-            // Host değilse YouTube player üzerinde de blocker ekle
             setTimeout(() => {
                 addVideoBlocker();
             }, 1000);
@@ -262,18 +285,20 @@ const _0x4a2b = (() => {
             _0x6e.onload = function() {
                 console.log('Iframe yuklendi');
                 _0xf4c1('Baglandi', true);
-                if (_0x1c) {
-                    _0xd29e('✅ Video yüklendi. HOST olarak kontrol edebilirsiniz.');
-                } else {
-                    _0xd29e('✅ Video yüklendi. HOST kontrolünde izleyebilirsiniz.');
-                }
             };
             
             _0x6c.appendChild(_0x6e);
 
-            // Host değilse iframe üzerinde blocker ekle
             setTimeout(() => {
                 addVideoBlocker();
+                
+                // Iframe için durum takibi
+                if (_0x1c) {
+                    // Host için periyodik kontrol
+                    setInterval(() => {
+                        _0x20.ref('rooms/' + _0x1b + '/lastPing').set(Date.now());
+                    }, 2000);
+                }
             }, 500);
 
             _0x1a = {
@@ -291,7 +316,15 @@ const _0x4a2b = (() => {
     const _0xe3b0 = (_0x8a) => {
         if (_0x1d || !_0x1c) return;
 
-        const _0x8b = _0x8a.data === YT.PlayerState.PLAYING ? 'playing' : 'paused';
+        const now = Date.now();
+        if (now - lastStateUpdate < 300) return; // Debounce
+        lastStateUpdate = now;
+
+        const _0x8b = _0x8a.data === YT.PlayerState.PLAYING ? 'playing' : 
+                     _0x8a.data === YT.PlayerState.PAUSED ? 'paused' : '';
+        
+        if (!_0x8b) return;
+
         const _0x8c = _0x1a.getCurrentTime();
 
         console.log('Host durum değişikliği:', _0x8b, 'Zaman:', _0x8c);
@@ -310,7 +343,7 @@ const _0x4a2b = (() => {
 
             console.log('Oda durumu güncellendi:', _0x9b);
 
-            // Sadece YouTube için senkronizasyon
+            // YouTube için senkronizasyon
             if (!isIframePlayer && !_0x1c && _0x1a && _0x1a.seekTo && typeof _0x1a.getCurrentTime === 'function') {
                 _0x1d = true;
                 
@@ -324,12 +357,14 @@ const _0x4a2b = (() => {
                         console.log('Zaman farkı büyük, atlanıyor:', _0x9b.time);
                         _0x1a.seekTo(_0x9b.time, true);
                     }
-                    if (_0x1a.getPlayerState() !== YT.PlayerState.PLAYING) {
+                    const playerState = _0x1a.getPlayerState();
+                    if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
                         console.log('Video başlatılıyor');
                         _0x1a.playVideo();
                     }
                 } else if (_0x9b.state === 'paused') {
-                    if (_0x1a.getPlayerState() === YT.PlayerState.PLAYING) {
+                    const playerState = _0x1a.getPlayerState();
+                    if (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING) {
                         console.log('Video duraklatılıyor');
                         _0x1a.pauseVideo();
                     }
@@ -340,6 +375,23 @@ const _0x4a2b = (() => {
                 }
                 
                 setTimeout(() => { _0x1d = false; }, 500);
+            }
+            
+            // Iframe için bildirim (host değilse)
+            if (isIframePlayer && !_0x1c) {
+                // Sadece durum değişikliklerinde bildirim
+                const prevState = window._lastIframeState || '';
+                if (prevState !== _0x9b.state) {
+                    window._lastIframeState = _0x9b.state;
+                    // İlk yükleme değilse bildirim göster
+                    if (prevState !== '') {
+                        if (_0x9b.state === 'playing') {
+                            console.log('HOST videoyu başlattı');
+                        } else if (_0x9b.state === 'paused') {
+                            console.log('HOST videoyu duraklattı');
+                        }
+                    }
+                }
             }
         });
 
@@ -417,17 +469,46 @@ const _0x4a2b = (() => {
     };
 
     const _0x1849 = () => {
-        const newName = prompt('Yeni ismini gir:', _0x1e);
-        if (newName && newName.trim() && newName.trim() !== _0x1e) {
+        const modal = document.getElementById('nameChangeModal');
+        if (!modal) {
+            createNameChangeModal();
+        }
+        
+        const modal2 = document.getElementById('nameChangeModal');
+        const input = document.getElementById('newNameInput');
+        input.value = _0x1e;
+        modal2.style.display = 'flex';
+        input.focus();
+        
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                _0x195a();
+            }
+        };
+    };
+
+    const _0x195a = () => {
+        const modal = document.getElementById('nameChangeModal');
+        const input = document.getElementById('newNameInput');
+        const newName = input.value.trim();
+        
+        if (newName && newName !== _0x1e) {
             const oldName = _0x1e;
-            _0x1e = newName.trim();
+            _0x1e = newName;
             
             _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).update({
                 username: _0x1e
             });
             
-            _0xd29e(oldName + ' ismini ' + _0x1e + ' olarak değiştirdi.');
+            _0xd29e(oldName + ' ismini ' + _0x1e + ' olarak değiştirdi');
         }
+        
+        modal.style.display = 'none';
+    };
+
+    const _0x1a6b = () => {
+        const modal = document.getElementById('nameChangeModal');
+        modal.style.display = 'none';
     };
 
     const _0x1738 = () => {
@@ -466,6 +547,8 @@ const _0x4a2b = (() => {
         joinRoom: _0xb18c,
         sendMessage: _0x12f4,
         changeName: _0x1849,
+        confirmNameChange: _0x195a,
+        cancelNameChange: _0x1a6b,
         leaveRoom: _0x1738
     };
 })();
