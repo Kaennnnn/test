@@ -1,5 +1,17 @@
 const _0x4a2b = (() => {
-    let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f = _0x5e8a(), _0x20;
+    let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f, _0x20;
+
+    // Önce fonksiyonları tanımla
+    const _0x5e8a = () => {
+        return 'user_' + Math.random().toString(36).substring(2, 15);
+    };
+
+    const _0x4c2d = () => {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
+    };
+
+    // Şimdi değişkeni başlat
+    _0x1f = _0x5e8a();
 
     const _0x3b9c = () => {
         try {
@@ -17,14 +29,6 @@ const _0x4a2b = (() => {
             console.error('baglanti hatasi:', _0x2b);
             alert('sayfayı yenile bağlantı kurulmadı.');
         }
-    };
-
-    const _0x4c2d = () => {
-        return Math.random().toString(36).substring(2, 8).toUpperCase();
-    };
-
-    const _0x5e8a = () => {
-        return 'user_' + Math.random().toString(36).substring(2, 15);
     };
 
     const _0x6f3b = (_0x3a) => {
