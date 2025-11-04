@@ -2,6 +2,8 @@ const _0x4a2b = (() => {
     let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f, _0x20;
     let isIframePlayer = false;
     let lastStateUpdate = 0;
+    let lastKnownState = '';
+    let syncInProgress = false;
 
     const _0x5e8a = () => {
         return 'user_' + Math.random().toString(36).substring(2, 15);
@@ -94,7 +96,7 @@ const _0x4a2b = (() => {
     };
 
     const addVideoBlocker = () => {
-        if (!_0x1c) {
+        if (!_0x1c && !isIframePlayer) {
             const blocker = document.createElement('div');
             blocker.id = 'videoBlocker';
             blocker.style.cssText = `
@@ -166,7 +168,8 @@ const _0x4a2b = (() => {
                 videoUrl: _0x4b.url || '',
                 state: 'paused',
                 time: 0,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                stateVersion: 0
             });
             console.log('kayit basarili');
 
@@ -289,18 +292,6 @@ const _0x4a2b = (() => {
             
             _0x6c.appendChild(_0x6e);
 
-            setTimeout(() => {
-                addVideoBlocker();
-                
-                // Iframe için durum takibi
-                if (_0x1c) {
-                    // Host için periyodik kontrol
-                    setInterval(() => {
-                        _0x20.ref('rooms/' + _0x1b + '/lastPing').set(Date.now());
-                    }, 2000);
-                }
-            }, 500);
-
             _0x1a = {
                 iframe: _0x6e,
                 isIframe: true
@@ -314,10 +305,10 @@ const _0x4a2b = (() => {
     };
 
     const _0xe3b0 = (_0x8a) => {
-        if (_0x1d || !_0x1c) return;
+        if (syncInProgress || !_0x1c) return;
 
         const now = Date.now();
-        if (now - lastStateUpdate < 300) return; // Debounce
+        if (now - lastStateUpdate < 500) return;
         lastStateUpdate = now;
 
         const _0x8b = _0x8a.data === YT.PlayerState.PLAYING ? 'playing' : 
@@ -325,73 +316,92 @@ const _0x4a2b = (() => {
         
         if (!_0x8b) return;
 
-        const _0x8c = _0x1a.getCurrentTime();
+        // Eğer durum gerçekten değiştiyse kaydet
+        if (_0x8b !== lastKnownState) {
+            lastKnownState = _0x8b;
+            const _0x8c = _0x1a.getCurrentTime();
 
-        console.log('Host durum değişikliği:', _0x8b, 'Zaman:', _0x8c);
+            console.log('HOST durum değişikliği:', _0x8b, 'Zaman:', _0x8c);
 
-        _0x20.ref('rooms/' + _0x1b).update({
-            state: _0x8b,
-            time: _0x8c,
-            timestamp: Date.now()
-        });
+            _0x20.ref('rooms/' + _0x1b).once('value', (snapshot) => {
+                const currentData = snapshot.val();
+                const newVersion = (currentData.stateVersion || 0) + 1;
+                
+                _0x20.ref('rooms/' + _0x1b).update({
+                    state: _0x8b,
+                    time: _0x8c,
+                    timestamp: Date.now(),
+                    stateVersion: newVersion
+                });
+            });
+        }
     };
 
     const _0xa07b = () => {
+        let lastSeenVersion = -1;
+
         _0x20.ref('rooms/' + _0x1b).on('value', (_0x9a) => {
             if (!_0x9a.exists()) return;
             const _0x9b = _0x9a.val();
 
             console.log('Oda durumu güncellendi:', _0x9b);
 
-            // YouTube için senkronizasyon
+            // YouTube için senkronizasyon (sadece izleyenler)
             if (!isIframePlayer && !_0x1c && _0x1a && _0x1a.seekTo && typeof _0x1a.getCurrentTime === 'function') {
-                _0x1d = true;
+                
+                // Versiyon kontrolü - sadece yeni değişiklikler için çalış
+                const currentVersion = _0x9b.stateVersion || 0;
+                if (currentVersion <= lastSeenVersion) {
+                    return;
+                }
+                lastSeenVersion = currentVersion;
+
+                syncInProgress = true;
                 
                 const currentTime = _0x1a.getCurrentTime();
-                const timeDiff = Math.abs(currentTime - _0x9b.time);
+                const targetTime = _0x9b.time || 0;
+                const timeDiff = Math.abs(currentTime - targetTime);
+                const currentPlayerState = _0x1a.getPlayerState();
                 
-                console.log('Senkronizasyon - Mevcut:', currentTime, 'Hedef:', _0x9b.time, 'Fark:', timeDiff);
+                console.log('🔄 Senkronizasyon:', {
+                    hedefDurum: _0x9b.state,
+                    hedefZaman: targetTime,
+                    mevcutZaman: currentTime,
+                    fark: timeDiff,
+                    mevcutDurum: currentPlayerState
+                });
                 
                 if (_0x9b.state === 'playing') {
+                    // Önce zamanı ayarla
                     if (timeDiff > 2) {
-                        console.log('Zaman farkı büyük, atlanıyor:', _0x9b.time);
-                        _0x1a.seekTo(_0x9b.time, true);
+                        console.log('⏩ Zaman atlanıyor:', targetTime);
+                        _0x1a.seekTo(targetTime, true);
                     }
-                    const playerState = _0x1a.getPlayerState();
-                    if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
-                        console.log('Video başlatılıyor');
+                    
+                    // Sonra oynat
+                    if (currentPlayerState !== YT.PlayerState.PLAYING && 
+                        currentPlayerState !== YT.PlayerState.BUFFERING) {
+                        console.log('▶️ Video başlatılıyor');
                         _0x1a.playVideo();
                     }
                 } else if (_0x9b.state === 'paused') {
-                    const playerState = _0x1a.getPlayerState();
-                    if (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING) {
-                        console.log('Video duraklatılıyor');
+                    // Önce durdur
+                    if (currentPlayerState === YT.PlayerState.PLAYING || 
+                        currentPlayerState === YT.PlayerState.BUFFERING) {
+                        console.log('⏸️ Video duraklatılıyor');
                         _0x1a.pauseVideo();
                     }
-                    if (timeDiff > 1) {
-                        console.log('Duraklama zamanı ayarlanıyor:', _0x9b.time);
-                        _0x1a.seekTo(_0x9b.time, true);
+                    
+                    // Sonra zamanı ayarla
+                    if (timeDiff > 0.5) {
+                        console.log('⏱️ Duraklama zamanı ayarlanıyor:', targetTime);
+                        _0x1a.seekTo(targetTime, true);
                     }
                 }
                 
-                setTimeout(() => { _0x1d = false; }, 500);
-            }
-            
-            // Iframe için bildirim (host değilse)
-            if (isIframePlayer && !_0x1c) {
-                // Sadece durum değişikliklerinde bildirim
-                const prevState = window._lastIframeState || '';
-                if (prevState !== _0x9b.state) {
-                    window._lastIframeState = _0x9b.state;
-                    // İlk yükleme değilse bildirim göster
-                    if (prevState !== '') {
-                        if (_0x9b.state === 'playing') {
-                            console.log('HOST videoyu başlattı');
-                        } else if (_0x9b.state === 'paused') {
-                            console.log('HOST videoyu duraklattı');
-                        }
-                    }
-                }
+                setTimeout(() => { 
+                    syncInProgress = false; 
+                }, 1000);
             }
         });
 
