@@ -720,7 +720,12 @@
         }
 
         function showWatchScreen(videoInfo) {
-            document.getElementById('welcomeScreen').classList.remove('active');
+            // Welcome ekranını tamamen gizle
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            welcomeScreen.classList.remove('active');
+            welcomeScreen.style.display = 'none';
+            
+            // Watch ekranını göster
             document.getElementById('watchScreen').classList.add('active');
             document.getElementById('displayRoomCode').textContent = currentRoom;
 
