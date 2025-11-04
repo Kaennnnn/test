@@ -1,7 +1,7 @@
 const _0x4a2b = (() => {
     let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f, _0x20;
+    let isIframePlayer = false;
 
-    // Önce fonksiyonları tanımla
     const _0x5e8a = () => {
         return 'user_' + Math.random().toString(36).substring(2, 15);
     };
@@ -10,7 +10,6 @@ const _0x4a2b = (() => {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
     };
 
-    // Şimdi değişkeni başlat
     _0x1f = _0x5e8a();
 
     const _0x3b9c = () => {
@@ -21,8 +20,10 @@ const _0x4a2b = (() => {
             _0x20.ref('.info/connected').on('value', (_0x2a) => {
                 if (_0x2a.val() === true) {
                     console.log('baglanti aktif');
+                    _0xf4c1('Baglandi', true);
                 } else {
                     console.log('baglanti kesildi');
+                    _0xf4c1('Baglanti Kesildi', false);
                 }
             });
         } catch (_0x2b) {
@@ -57,6 +58,41 @@ const _0x4a2b = (() => {
         return null;
     };
 
+    const updateControlButtons = () => {
+        const controlsDiv = document.querySelector('.controls');
+        
+        // Herkes için sadece çık ve isim değiştir butonları
+        controlsDiv.innerHTML = `
+            <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
+            <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
+        `;
+    };
+
+    const addVideoBlocker = () => {
+        // Host değilse video üzerine görünmez bir katman ekle
+        if (!_0x1c) {
+            const blocker = document.createElement('div');
+            blocker.id = 'videoBlocker';
+            blocker.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 100;
+                cursor: not-allowed;
+                background: transparent;
+            `;
+            blocker.title = 'Sadece HOST kontrol edebilir';
+            
+            const container = document.getElementById('playerContainer');
+            container.style.position = 'relative';
+            container.appendChild(blocker);
+            
+            console.log('Video engelleyici eklendi (HOST değilsiniz)');
+        }
+    };
+
     const _0x7d4e = async () => {
         console.log('createRoom cagirildi');
         
@@ -81,7 +117,7 @@ const _0x4a2b = (() => {
 
         if (_0x4b.type === 'needs_iframe') {
             const _0x4c = prompt(
-                'Bu siteden otomatik video cekme desteklenmiyor.\n\n'
+                'Bu siteden otomatik video cekme desteklenmiyor.\n\nIframe URL girin:'
             );
             
             if (!_0x4c) {
@@ -113,6 +149,7 @@ const _0x4a2b = (() => {
             _0x8e5f();
             _0x9f6a(_0x4b);
             _0xa07b();
+            updateControlButtons();
         } catch (_0x4d) {
             console.error('hata oluşturulamadı:', _0x4d);
             alert('hata oluşturulamadı: ' + _0x4d.message);
@@ -147,6 +184,7 @@ const _0x4a2b = (() => {
                 _0x8e5f();
                 _0x9f6a(_0x5d);
                 _0xa07b();
+                updateControlButtons();
             } else {
                 alert('boyle bir oda yok');
             }
@@ -176,6 +214,7 @@ const _0x4a2b = (() => {
         _0x6c.innerHTML = '';
 
         if (_0x6a.type === 'youtube') {
+            isIframePlayer = false;
             const _0x6d = document.createElement('div');
             _0x6d.id = 'player';
             _0x6c.appendChild(_0x6d);
@@ -184,13 +223,25 @@ const _0x4a2b = (() => {
                 height: '100%',
                 width: '100%',
                 videoId: _0x6a.id,
-                playerVars: { 'playsinline': 1, 'controls': 1 },
+                playerVars: { 
+                    'playsinline': 1, 
+                    'controls': _0x1c ? 1 : 0,
+                    'disablekb': _0x1c ? 0 : 1,
+                    'fs': _0x1c ? 1 : 0,
+                    'modestbranding': 1
+                },
                 events: {
                     'onReady': _0xc2af,
                     'onStateChange': _0xe3b0
                 }
             });
+
+            // Host değilse YouTube player üzerinde de blocker ekle
+            setTimeout(() => {
+                addVideoBlocker();
+            }, 1000);
         } else if (_0x6a.type === 'iframe') {
+            isIframePlayer = true;
             const _0x6e = document.createElement('iframe');
             _0x6e.src = _0x6a.url;
             _0x6e.width = '100%';
@@ -210,40 +261,31 @@ const _0x4a2b = (() => {
             
             _0x6e.onload = function() {
                 console.log('Iframe yuklendi');
-                try {
-                    const _0x70 = _0x6e.contentDocument;
-                    console.log('tam erisim var');
-                } catch(_0x71) {
-                    console.warn('CORS var:', _0x71.message);
+                _0xf4c1('Baglandi', true);
+                if (_0x1c) {
+                    _0xd29e('✅ Video yüklendi. HOST olarak kontrol edebilirsiniz.');
+                } else {
+                    _0xd29e('✅ Video yüklendi. HOST kontrolünde izleyebilirsiniz.');
                 }
             };
             
             _0x6c.appendChild(_0x6e);
 
+            // Host değilse iframe üzerinde blocker ekle
+            setTimeout(() => {
+                addVideoBlocker();
+            }, 500);
+
             _0x1a = {
                 iframe: _0x6e,
-                playVideo: function() { 
-                    console.log('Oynat - iframe desteklemiyor');
-                },
-                pauseVideo: function() { 
-                    console.log('Duraklat - iframe desteklemiyor');
-                },
-                seekTo: function(_0x72) { 
-                    console.log('Zaman atla - iframe desteklemiyor');
-                },
-                getCurrentTime: function() { return 0; },
-                getPlayerState: function() { return 1; }
+                isIframe: true
             };
-
-            setTimeout(() => {
-                _0xf4c1('Baglandi', true);
-                _0xd29e('video yüklendi butonlar calısmayabilir');
-            }, 1500);
         }
     };
 
     const _0xc2af = (_0x7a) => {
         _0xf4c1('Baglandi', true);
+        console.log('YouTube player hazır');
     };
 
     const _0xe3b0 = (_0x8a) => {
@@ -251,6 +293,8 @@ const _0x4a2b = (() => {
 
         const _0x8b = _0x8a.data === YT.PlayerState.PLAYING ? 'playing' : 'paused';
         const _0x8c = _0x1a.getCurrentTime();
+
+        console.log('Host durum değişikliği:', _0x8b, 'Zaman:', _0x8c);
 
         _0x20.ref('rooms/' + _0x1b).update({
             state: _0x8b,
@@ -264,15 +308,37 @@ const _0x4a2b = (() => {
             if (!_0x9a.exists()) return;
             const _0x9b = _0x9a.val();
 
-            if (!_0x1c && _0x1a && _0x1a.seekTo) {
+            console.log('Oda durumu güncellendi:', _0x9b);
+
+            // Sadece YouTube için senkronizasyon
+            if (!isIframePlayer && !_0x1c && _0x1a && _0x1a.seekTo && typeof _0x1a.getCurrentTime === 'function') {
                 _0x1d = true;
+                
+                const currentTime = _0x1a.getCurrentTime();
+                const timeDiff = Math.abs(currentTime - _0x9b.time);
+                
+                console.log('Senkronizasyon - Mevcut:', currentTime, 'Hedef:', _0x9b.time, 'Fark:', timeDiff);
+                
                 if (_0x9b.state === 'playing') {
-                    const _0x9c = Math.abs(_0x1a.getCurrentTime() - _0x9b.time);
-                    if (_0x9c > 2) _0x1a.seekTo(_0x9b.time, true);
-                    if (_0x1a.getPlayerState() !== YT.PlayerState.PLAYING) _0x1a.playVideo();
-                } else {
-                    if (_0x1a.getPlayerState() === YT.PlayerState.PLAYING) _0x1a.pauseVideo();
+                    if (timeDiff > 2) {
+                        console.log('Zaman farkı büyük, atlanıyor:', _0x9b.time);
+                        _0x1a.seekTo(_0x9b.time, true);
+                    }
+                    if (_0x1a.getPlayerState() !== YT.PlayerState.PLAYING) {
+                        console.log('Video başlatılıyor');
+                        _0x1a.playVideo();
+                    }
+                } else if (_0x9b.state === 'paused') {
+                    if (_0x1a.getPlayerState() === YT.PlayerState.PLAYING) {
+                        console.log('Video duraklatılıyor');
+                        _0x1a.pauseVideo();
+                    }
+                    if (timeDiff > 1) {
+                        console.log('Duraklama zamanı ayarlanıyor:', _0x9b.time);
+                        _0x1a.seekTo(_0x9b.time, true);
+                    }
                 }
+                
                 setTimeout(() => { _0x1d = false; }, 500);
             }
         });
@@ -350,45 +416,24 @@ const _0x4a2b = (() => {
         _0xdb.scrollTop = _0xdb.scrollHeight;
     };
 
-    const _0x1405 = () => {
-        if (!_0x1a) return;
-        if (_0x1a.playVideo) _0x1a.playVideo();
-        if (_0x1c) {
-            _0x20.ref('rooms/' + _0x1b).update({
-                state: 'playing',
-                time: _0x1a.getCurrentTime ? _0x1a.getCurrentTime() : 0,
-                timestamp: Date.now()
+    const _0x1849 = () => {
+        const newName = prompt('Yeni ismini gir:', _0x1e);
+        if (newName && newName.trim() && newName.trim() !== _0x1e) {
+            const oldName = _0x1e;
+            _0x1e = newName.trim();
+            
+            _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).update({
+                username: _0x1e
             });
-        }
-    };
-
-    const _0x1516 = () => {
-        if (!_0x1a) return;
-        if (_0x1a.pauseVideo) _0x1a.pauseVideo();
-        if (_0x1c) {
-            _0x20.ref('rooms/' + _0x1b).update({
-                state: 'paused',
-                time: _0x1a.getCurrentTime ? _0x1a.getCurrentTime() : 0,
-                timestamp: Date.now()
-            });
-        }
-    };
-
-    const _0x1627 = () => {
-        if (!_0x1a) return;
-        if (_0x1a.seekTo) _0x1a.seekTo(0);
-        if (_0x1c) {
-            _0x20.ref('rooms/' + _0x1b).update({
-                time: 0,
-                timestamp: Date.now()
-            });
+            
+            _0xd29e(oldName + ' ismini ' + _0x1e + ' olarak değiştirdi.');
         }
     };
 
     const _0x1738 = () => {
         if (_0x1b) {
             _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).remove();
-            _0xd29e(_0x1e + ' odadan ayrildi');
+            _0xd29e(_0x1e + ' odadan ayrıldı');
         }
         location.reload();
     };
@@ -420,9 +465,7 @@ const _0x4a2b = (() => {
         createRoom: _0x7d4e,
         joinRoom: _0xb18c,
         sendMessage: _0x12f4,
-        syncPlay: _0x1405,
-        syncPause: _0x1516,
-        syncRestart: _0x1627,
+        changeName: _0x1849,
         leaveRoom: _0x1738
     };
 })();
