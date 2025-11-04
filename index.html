@@ -26,10 +26,14 @@
 
         /* Welcome Screen */
         .welcome-screen {
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             min-height: 80vh;
+        }
+
+        .welcome-screen.active {
+            display: flex;
         }
 
         .welcome-card {
@@ -723,7 +727,6 @@
             // Welcome ekranını tamamen gizle
             const welcomeScreen = document.getElementById('welcomeScreen');
             welcomeScreen.classList.remove('active');
-            welcomeScreen.style.display = 'none';
             
             // Watch ekranını göster
             document.getElementById('watchScreen').classList.add('active');
@@ -749,15 +752,9 @@
                 });
             } else if (videoInfo.type === 'iframe') {
                 const iframe = document.createElement('iframe');
-                let src = videoInfo.url;
-                
-                if (!src.includes('ap=') && !src.includes('autoplay=')) {
-                    src += (src.includes('?') ? '&' : '?') + 'ap=1';
-                }
-                
-                iframe.src = src;
-                iframe.style.width = '100%';
-                iframe.style.height = '100%';
+                iframe.src = videoInfo.url;
+                iframe.width = '100%';
+                iframe.height = '100%';
                 iframe.style.border = 'none';
                 iframe.frameBorder = '0';
                 iframe.scrolling = 'no';
@@ -766,9 +763,25 @@
                 
                 container.appendChild(iframe);
 
+                // Player objesi oluştur (iframe için)
+                player = {
+                    iframe: iframe,
+                    playVideo: function() { 
+                        console.log('▶️ Oynat - iframe için desteklenmiyor');
+                    },
+                    pauseVideo: function() { 
+                        console.log('⏸️ Duraklat - iframe için desteklenmiyor');
+                    },
+                    seekTo: function(time) { 
+                        console.log('⏮️ Zaman atla - iframe için desteklenmiyor');
+                    },
+                    getCurrentTime: function() { return 0; },
+                    getPlayerState: function() { return 1; }
+                };
+
                 setTimeout(() => {
                     updateStatus('Bağlandı', true);
-                    sendSystemMessage('Video oynatıcı yüklendi ✓');
+                    sendSystemMessage('🎬 Video oynatıcı yüklendi! Not: Bu video için oynat/duraklat butonları çalışmayabilir.');
                 }, 1500);
             }
         }
