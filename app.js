@@ -291,18 +291,21 @@ const _0x4a2b = (() => {
                 addVideoBlocker();
             }, 1000);
         } else if (_0x6a.type === 'iframe') {
-            isIframePlayer = true;
-            const _0x6e = document.createElement('iframe');
-            _0x6e.src = _0x6a.url;
-            _0x6e.width = '100%';
-            _0x6e.height = '100%';
-            _0x6e.style.border = 'none';
-            _0x6e.frameBorder = '0';
-            _0x6e.scrolling = 'no';
-            _0x6e.allowFullscreen = true;
-            _0x6e.referrerPolicy = 'no-referrer';
-            _0x6e.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups allow-presentation';
-            _0x6e.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+    isIframePlayer = true;
+    const _0x6e = document.createElement('iframe');
+    _0x6e.src = _0x6a.url;
+    _0x6e.width = '100%';
+    _0x6e.height = '100%';
+    _0x6e.style.border = 'none';
+    _0x6e.frameBorder = '0';
+    _0x6e.scrolling = 'no';
+    _0x6e.allowFullscreen = true;
+    _0x6e.setAttribute('allowfullscreen', '');
+    _0x6e.setAttribute('webkitallowfullscreen', '');
+    _0x6e.setAttribute('mozallowfullscreen', '');
+    _0x6e.referrerPolicy = 'no-referrer';
+    _0x6e.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox';
+    _0x6e.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope';
             
             _0x6e.onerror = function(_0x6f) {
                 console.error('hata:', _0x6f);
