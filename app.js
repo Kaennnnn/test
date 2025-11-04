@@ -660,20 +660,30 @@ const _0x10d2 = (_0xaa) => {
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        _0x3b9c();
+    _0x3b9c();
 
-        document.getElementById('chatInput').addEventListener('keypress', (_0xfa) => {
-            if (_0xfa.key === 'Enter') {
-                _0x12f4();
-            }
-        });
-
-        window.addEventListener('beforeunload', () => {
-            if (_0x1b) {
-                _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).remove();
-            }
-        });
+    document.getElementById('chatInput').addEventListener('keypress', (_0xfa) => {
+        if (_0xfa.key === 'Enter') {
+            _0x12f4();
+        }
     });
+
+    // MOBİL CHAT INPUT LİSTENER - BUNU EKLE
+    const mobileInput = document.getElementById('mobileChatInput');
+    if (mobileInput) {
+        mobileInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                _0x3c8d();
+            }
+        });
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (_0x1b) {
+            _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).remove();
+        }
+    });
+});
     const _0x2b7c = () => {
     const panel = document.getElementById('mobileChatPanel');
     panel.classList.toggle('open');
@@ -693,19 +703,9 @@ const _0x3c8d = () => {
     };
 
     _0x20.ref('rooms/' + _0x1b + '/chat').push(msgData);
+    _0x11e3(msgData); // BU SATIRI EKLE
     input.value = '';
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-    const mobileInput = document.getElementById('mobileChatInput');
-    if (mobileInput) {
-        mobileInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                _0x3c8d();
-            }
-        });
-    }
-});
     return {
     createRoom: _0x7d4e,
     joinRoom: _0xb18c,
