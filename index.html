@@ -759,7 +759,26 @@
                 iframe.frameBorder = '0';
                 iframe.scrolling = 'no';
                 iframe.allowFullscreen = true;
+                iframe.referrerPolicy = 'no-referrer';
+                iframe.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups allow-presentation';
                 iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+                
+                // CORS hatalarını logla
+                iframe.onerror = function(e) {
+                    console.error('❌ İframe yükleme hatası:', e);
+                    sendSystemMessage('⚠️ Video yüklenemedi - Site iframe\'e izin vermiyor olabilir');
+                };
+                
+                iframe.onload = function() {
+                    console.log('✅ İframe yüklendi');
+                    try {
+                        // CORS testi
+                        const doc = iframe.contentDocument;
+                        console.log('✅ CORS yok, tam erişim var');
+                    } catch(e) {
+                        console.warn('⚠️ CORS var ama video oynatılıyor olabilir:', e.message);
+                    }
+                };
                 
                 container.appendChild(iframe);
 
