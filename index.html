@@ -555,6 +555,7 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
+        // Firebase yapılandırması
         const firebaseConfig = {
             apiKey: "AIzaSyDaYJOPgAMLn2vD-khXOGA7oVd22RtzvMw",
             authDomain: "watchparty-12d55.firebaseapp.com",
@@ -565,8 +566,33 @@
             appId: "1:551355494947:web:17205c0efd91b16c547796"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // Firebase'i başlat ve hata kontrolü
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log('✅ Firebase bağlantısı başarılı');
+            
+            // Bağlantı testi
+            database.ref('.info/connected').on('value', (snap) => {
+                if (snap.val() === true) {
+                    console.log('✅ Firebase Realtime Database bağlantısı aktif');
+                } else {
+                    console.log('⚠️ Firebase bağlantısı kesildi');
+                }
+            });
+        } catch (error) {
+            console.error('❌ Firebase bağlantı hatası:', error);
+            alert('Bağlantı hatası! Lütfen sayfayı yenileyin.');
+        }
+
+        // Yardımcı fonksiyonlar
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substring(2, 15);
+        }
 
         let player;
         let currentRoom = null;
@@ -574,6 +600,7 @@
         let syncLock = false;
         let username = '';
         let userId = generateUserId();
+        let database;
 
         function extractVideoInfo(url) {
             // Direkt iframe URL'leri (Vidrame, vb)
@@ -612,14 +639,21 @@
         }
 
         async function createRoom() {
+            console.log('🎬 createRoom çağrıldı');
+            
             username = document.getElementById('usernameInput').value.trim();
+            console.log('👤 Kullanıcı adı:', username);
+            
             if (!username) {
                 alert('Lütfen kullanıcı adı gir!');
                 return;
             }
 
             const videoUrl = document.getElementById('videoUrl').value;
+            console.log('🎥 Video URL:', videoUrl);
+            
             let videoInfo = extractVideoInfo(videoUrl);
+            console.log('📊 Video Info:', videoInfo);
 
             if (!videoInfo) {
                 alert('Geçerli bir video URL\'si girin!\n\nDesteklenen formatlar:\n- YouTube: https://youtube.com/watch?v=...\n- Vidrame: https://vidrame.pro/vr/12345\n- Direkt iframe URL\'si');
@@ -640,27 +674,38 @@
                 );
                 
                 if (!iframeUrl) {
+                    console.log('❌ İframe URL girilmedi');
                     return;
                 }
                 
                 videoInfo = { type: 'iframe', url: iframeUrl };
+                console.log('📊 Yeni Video Info:', videoInfo);
             }
 
             currentRoom = generateRoomCode();
+            console.log('🏠 Oda kodu:', currentRoom);
+            
             isHost = true;
 
-            database.ref('rooms/' + currentRoom).set({
-                videoType: videoInfo.type,
-                videoId: videoInfo.id || '',
-                videoUrl: videoInfo.url || '',
-                state: 'paused',
-                time: 0,
-                timestamp: Date.now()
-            });
+            try {
+                console.log('💾 Firebase\'e kayıt ediliyor...');
+                await database.ref('rooms/' + currentRoom).set({
+                    videoType: videoInfo.type,
+                    videoId: videoInfo.id || '',
+                    videoUrl: videoInfo.url || '',
+                    state: 'paused',
+                    time: 0,
+                    timestamp: Date.now()
+                });
+                console.log('✅ Firebase kaydı başarılı');
 
-            joinAsUser();
-            showWatchScreen(videoInfo);
-            listenToRoom();
+                joinAsUser();
+                showWatchScreen(videoInfo);
+                listenToRoom();
+            } catch (error) {
+                console.error('❌ Oda oluşturma hatası:', error);
+                alert('Oda oluşturulamadı! Hata: ' + error.message);
+            }
         }
 
         function joinRoom() {
@@ -915,14 +960,6 @@
             const text = document.getElementById('statusText');
             text.textContent = message;
             badge.className = 'status-badge ' + (connected ? 'connected' : 'disconnected');
-        }
-
-        function generateRoomCode() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-
-        function generateUserId() {
-            return 'user_' + Math.random().toString(36).substring(2, 15);
         }
 
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
