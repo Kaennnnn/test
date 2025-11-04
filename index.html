@@ -14,30 +14,23 @@
                 <div class="logo">
                     <h1>Kaen&Wang</h1>
                 </div>
-
                 <div class="input-group">
                     <label>Nick</label>
                     <input type="text" id="usernameInput" placeholder="Adını gir..." maxlength="20">
                 </div>
-
                 <div class="input-group">
                     <label>Url</label>
                     <input type="text" id="videoUrl" placeholder="YouTube URL veya direkt iframe URL (vidrame.pro/vr/...)">
                 </div>
-
                 <button class="btn-primary" onclick="_0x4a2b.createRoom()">Oda Oluştur</button>
-
                 <div class="divider">veya</div>
-
                 <div class="input-group">
                     <label>Oda Kodu</label>
                     <input type="text" id="roomCodeInput" placeholder="ABC123">
                 </div>
-
                 <button class="btn-secondary" onclick="_0x4a2b.joinRoom()">Odaya Katıl</button>
             </div>
         </div>
-
         <div class="watch-screen" id="watchScreen">
             <div class="main-content">
                 <div class="room-header">
@@ -50,9 +43,7 @@
                         <span id="statusText">Bağlanıyor</span>
                     </div>
                 </div>
-
                 <div class="video-container" id="playerContainer"></div>
-
                 <div class="controls">
                     <button class="btn-primary" onclick="_0x4a2b.syncPlay()">oynat</button>
                     <button class="btn-primary" onclick="_0x4a2b.syncPause()">duraklat</button>
@@ -60,13 +51,11 @@
                     <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">çık</button>
                 </div>
             </div>
-
             <div class="sidebar">
                 <div class="sidebar-card">
                     <h3>İzleyenler (<span id="userCount">0</span>)</h3>
                     <div class="users-list" id="usersList"></div>
                 </div>
-
                 <div class="sidebar-card">
                     <h3>Sohbet</h3>
                     <div class="chat-container">
@@ -75,6 +64,30 @@
                             <input type="text" id="chatInput" placeholder="Mesaj gönder.." maxlength="200">
                             <button class="btn-primary" onclick="_0x4a2b.sendMessage()">Gönder</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobil Chat Butonu ve Paneli -->
+    <button class="mobile-chat-toggle" onclick="_0x4a2b.toggleMobileChat()" id="mobileChatBtn">💬</button>
+
+    <div class="mobile-chat-panel" id="mobileChatPanel">
+        <div class="mobile-chat-header">
+            <h3>Sohbet</h3>
+            <button class="mobile-chat-close" onclick="_0x4a2b.toggleMobileChat()">×</button>
+        </div>
+        <div class="mobile-chat-content">
+            <div class="sidebar-card" style="flex: 1; display: flex; flex-direction: column;">
+                <h3>İzleyenler (<span id="mobileUserCount">0</span>)</h3>
+                <div class="users-list" id="mobileUsersList" style="margin-bottom: 20px;"></div>
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; flex: 1; display: flex; flex-direction: column;">
+                    <h3 style="margin-bottom: 10px;">Mesajlar</h3>
+                    <div class="chat-messages" id="mobileChatMessages" style="flex: 1;"></div>
+                    <div class="chat-input-group">
+                        <input type="text" id="mobileChatInput" placeholder="Mesaj gönder.." maxlength="200">
+                        <button class="btn-primary" onclick="_0x4a2b.sendMobileMessage()">Gönder</button>
                     </div>
                 </div>
             </div>
