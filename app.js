@@ -5,17 +5,17 @@ const _0x4a2b = (() => {
         try {
             firebase.initializeApp(_0x2c7d());
             _0x20 = firebase.database();
-            console.log('Firebase baglanti basarili');
+            console.log('baglanti basarili');
             _0x20.ref('.info/connected').on('value', (_0x2a) => {
                 if (_0x2a.val() === true) {
-                    console.log('Firebase Realtime Database baglantisi aktif');
+                    console.log('baglanti aktif');
                 } else {
-                    console.log('Firebase baglantisi kesildi');
+                    console.log('baglanti kesildi');
                 }
             });
         } catch (_0x2b) {
-            console.error('Firebase baglanti hatasi:', _0x2b);
-            alert('Baglanti hatasi! Lutfen sayfayi yenileyin.');
+            console.error('baglanti hatasi:', _0x2b);
+            alert('sayfayı yenile bağlantı kurulmadı.');
         }
     };
 
@@ -57,10 +57,10 @@ const _0x4a2b = (() => {
         console.log('createRoom cagirildi');
         
         _0x1e = document.getElementById('usernameInput').value.trim();
-        console.log('Kullanici adi:', _0x1e);
+        console.log('nick :', _0x1e);
         
         if (!_0x1e) {
-            alert('Lutfen kullanici adi gir!');
+            alert('lütfen isim giriniz');
             return;
         }
 
@@ -71,20 +71,13 @@ const _0x4a2b = (() => {
         console.log('Video Info:', _0x4b);
 
         if (!_0x4b) {
-            alert('Gecerli bir video URL\'si girin!\n\nDesteklenen formatlar:\n- YouTube: https://youtube.com/watch?v=...\n- Vidrame: https://vidrame.pro/vr/12345\n- Direkt iframe URL\'si');
+            alert('girilen değer geçerli değil');
             return;
         }
 
         if (_0x4b.type === 'needs_iframe') {
             const _0x4c = prompt(
-                'Bu siteden otomatik video cekme desteklenmiyor.\n\n' +
-                'Cozum: Videonun IFRAME URL\'sini yapistirin\n\n' +
-                'Nasil bulunur?\n' +
-                '1. Sayfada sag tikla -> Ogeyi Incele\n' +
-                '2. <iframe src="..."> icindeki URL\'yi kopyala\n' +
-                '3. Buraya yapistir\n\n' +
-                'Ornek: https://vidrame.pro/vr/57346267\n\n' +
-                'Iframe URL:'
+                'Bu siteden otomatik video cekme desteklenmiyor.\n\n'
             );
             
             if (!_0x4c) {
@@ -102,7 +95,7 @@ const _0x4a2b = (() => {
         _0x1c = true;
 
         try {
-            console.log('Firebase\'e kayit ediliyor...');
+            console.log('kayit ediliyor...');
             await _0x20.ref('rooms/' + _0x1b).set({
                 videoType: _0x4b.type,
                 videoId: _0x4b.id || '',
@@ -111,27 +104,27 @@ const _0x4a2b = (() => {
                 time: 0,
                 timestamp: Date.now()
             });
-            console.log('Firebase kaydi basarili');
+            console.log('kayit basarili');
 
             _0x8e5f();
             _0x9f6a(_0x4b);
             _0xa07b();
         } catch (_0x4d) {
-            console.error('Oda olusturma hatasi:', _0x4d);
-            alert('Oda olusturulamadi! Hata: ' + _0x4d.message);
+            console.error('hata oluşturulamadı:', _0x4d);
+            alert('hata oluşturulamadı: ' + _0x4d.message);
         }
     };
 
     const _0xb18c = () => {
         _0x1e = document.getElementById('usernameInput').value.trim();
         if (!_0x1e) {
-            alert('Lutfen kullanici adi gir!');
+            alert('isim alın lütfen');
             return;
         }
 
         const _0x5a = document.getElementById('roomCodeInput').value.toUpperCase();
         if (!_0x5a) {
-            alert('Oda kodu girin!');
+            alert('oda kodu girmelisin');
             return;
         }
 
@@ -151,7 +144,7 @@ const _0x4a2b = (() => {
                 _0x9f6a(_0x5d);
                 _0xa07b();
             } else {
-                alert('Oda bulunamadi!');
+                alert('boyle bir oda yok');
             }
         });
     };
@@ -165,7 +158,7 @@ const _0x4a2b = (() => {
 
         _0x20.ref('rooms/' + _0x1b + '/users/' + _0x1f).onDisconnect().remove();
 
-        _0xd29e(_0x1e + ' odaya katildi');
+        _0xd29e(_0x1e + ' odaya giriş yaptı.');
     };
 
     const _0x9f6a = (_0x6a) => {
@@ -207,17 +200,17 @@ const _0x4a2b = (() => {
             _0x6e.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
             
             _0x6e.onerror = function(_0x6f) {
-                console.error('Iframe yukleme hatasi:', _0x6f);
-                _0xd29e('Video yuklenemedi - Site iframe\'e izin vermiyor olabilir');
+                console.error('hata:', _0x6f);
+                _0xd29e('video yüklenemedi site engeli');
             };
             
             _0x6e.onload = function() {
                 console.log('Iframe yuklendi');
                 try {
                     const _0x70 = _0x6e.contentDocument;
-                    console.log('CORS yok, tam erisim var');
+                    console.log('tam erisim var');
                 } catch(_0x71) {
-                    console.warn('CORS var ama video oynatiliyor olabilir:', _0x71.message);
+                    console.warn('CORS var:', _0x71.message);
                 }
             };
             
@@ -226,13 +219,13 @@ const _0x4a2b = (() => {
             _0x1a = {
                 iframe: _0x6e,
                 playVideo: function() { 
-                    console.log('Oynat - iframe icin desteklenmiyor');
+                    console.log('Oynat - iframe desteklemiyor');
                 },
                 pauseVideo: function() { 
-                    console.log('Duraklat - iframe icin desteklenmiyor');
+                    console.log('Duraklat - iframe desteklemiyor');
                 },
                 seekTo: function(_0x72) { 
-                    console.log('Zaman atla - iframe icin desteklenmiyor');
+                    console.log('Zaman atla - iframe desteklemiyor');
                 },
                 getCurrentTime: function() { return 0; },
                 getPlayerState: function() { return 1; }
@@ -240,7 +233,7 @@ const _0x4a2b = (() => {
 
             setTimeout(() => {
                 _0xf4c1('Baglandi', true);
-                _0xd29e('Video oynatici yuklendi! Not: Bu video icin oynat/duraklat butonlari calismayabilir.');
+                _0xd29e('video yüklendi butonlar calısmayabilir');
             }, 1500);
         }
     };
