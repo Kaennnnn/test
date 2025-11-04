@@ -931,4 +931,16 @@
         }
 
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key ===
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (currentRoom) {
+                database.ref('rooms/' + currentRoom + '/users/' + userId).remove();
+            }
+        });
+    </script>
+</body>
+</html>
