@@ -40,6 +40,22 @@ const _0x4a2b = (() => {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     };
 
+    const createVideoChangeModal = () => {
+        const modalHTML = `
+            <div id="videoChangeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
+                <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.95)); padding: 40px; border-radius: 20px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: modalSlide 0.3s ease;">
+                    <h2 style="color: white; margin-bottom: 20px; font-size: 1.5em; text-align: center;">Video Değiştir</h2>
+                    <input type="text" id="newVideoInput" placeholder="Yeni video URL'si (YouTube veya iframe)..." style="width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; font-size: 16px; background: rgba(255,255,255,0.1); color: white; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="_0x4a2b.cancelVideoChange()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">İptal</button>
+                        <button onclick="_0x4a2b.confirmVideoChange()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Değiştir</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    };
+
     const _0x3b9c = () => {
         try {
             firebase.initializeApp(_0x2c7d());
@@ -89,10 +105,19 @@ const _0x4a2b = (() => {
     const updateControlButtons = () => {
         const controlsDiv = document.querySelector('.controls');
         
-        controlsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
-            <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
-        `;
+        if (_0x1c) {
+            // HOST için video değiştir butonu da ekle
+            controlsDiv.innerHTML = `
+                <button class="btn-primary" onclick="_0x4a2b.changeVideo()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🎬 Video Değiştir</button>
+                <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
+                <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
+            `;
+        } else {
+            controlsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
+                <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
+            `;
+        }
     };
 
     const addVideoBlocker = () => {
@@ -339,10 +364,20 @@ const _0x4a2b = (() => {
 
     const _0xa07b = () => {
         let lastSeenVersion = -1;
+        let lastVideoId = '';
 
         _0x20.ref('rooms/' + _0x1b).on('value', (_0x9a) => {
             if (!_0x9a.exists()) return;
             const _0x9b = _0x9a.val();
+
+            // Video değişti mi kontrol et
+            const currentVideoId = _0x9b.videoId || _0x9b.videoUrl || '';
+            if (lastVideoId && lastVideoId !== currentVideoId) {
+                console.log('Video değişti, sayfa yenileniyor...');
+                location.reload();
+                return;
+            }
+            lastVideoId = currentVideoId;
 
             console.log('Oda durumu güncellendi:', _0x9b);
 
@@ -529,6 +564,81 @@ const _0x4a2b = (() => {
         location.reload();
     };
 
+    const _0x2a4f = () => {
+        if (!_0x1c) {
+            alert('Sadece HOST video değiştirebilir!');
+            return;
+        }
+
+        const modal = document.getElementById('videoChangeModal');
+        if (!modal) {
+            createVideoChangeModal();
+        }
+        
+        const modal2 = document.getElementById('videoChangeModal');
+        const input = document.getElementById('newVideoInput');
+        input.value = '';
+        modal2.style.display = 'flex';
+        input.focus();
+        
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                _0x3b5g();
+            }
+        };
+    };
+
+    const _0x3b5g = async () => {
+        const modal = document.getElementById('videoChangeModal');
+        const input = document.getElementById('newVideoInput');
+        const newUrl = input.value.trim();
+        
+        if (!newUrl) {
+            alert('Lütfen bir URL girin!');
+            return;
+        }
+
+        let videoInfo = _0x6f3b(newUrl);
+        
+        if (!videoInfo) {
+            alert('Geçersiz URL! YouTube veya iframe linki girin.');
+            return;
+        }
+
+        if (videoInfo.type === 'needs_iframe') {
+            const iframeUrl = prompt('Bu siteden otomatik video çekme desteklenmiyor.\n\nIframe URL girin:');
+            if (!iframeUrl) return;
+            videoInfo = { type: 'iframe', url: iframeUrl };
+        }
+
+        try {
+            // Firebase'de videoyu güncelle
+            await _0x20.ref('rooms/' + _0x1b).update({
+                videoType: videoInfo.type,
+                videoId: videoInfo.id || '',
+                videoUrl: videoInfo.url || '',
+                state: 'paused',
+                time: 0,
+                timestamp: Date.now(),
+                stateVersion: 0
+            });
+
+            _0xd29e('HOST videoyu değiştirdi');
+            modal.style.display = 'none';
+            
+            // Sayfayı yenile (tüm izleyiciler için)
+            location.reload();
+        } catch (error) {
+            console.error('Video değiştirme hatası:', error);
+            alert('Video değiştirilemedi: ' + error.message);
+        }
+    };
+
+    const _0x4c6h = () => {
+        const modal = document.getElementById('videoChangeModal');
+        modal.style.display = 'none';
+    };
+
     const _0xf4c1 = (_0xea, _0xeb) => {
         const _0xec = document.getElementById('statusBadge');
         const _0xed = document.getElementById('statusText');
@@ -559,6 +669,9 @@ const _0x4a2b = (() => {
         changeName: _0x1849,
         confirmNameChange: _0x195a,
         cancelNameChange: _0x1a6b,
-        leaveRoom: _0x1738
+        leaveRoom: _0x1738,
+        changeVideo: _0x2a4f,
+        confirmVideoChange: _0x3b5g,
+        cancelVideoChange: _0x4c6h
     };
 })();
