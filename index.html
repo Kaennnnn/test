@@ -8,20 +8,19 @@
 </head>
 <body>
     <div class="container">
-        <!-- Welcome Screen -->
         <div class="welcome-screen active" id="welcomeScreen">
             <div class="welcome-card">
                 <div class="logo">
-                    <h1>Watch Party</h1>
+                    <h1>Kaen&Wang</h1>
                 </div>
 
                 <div class="input-group">
-                    <label>Kullanıcı Adı</label>
+                    <label>Nick</label>
                     <input type="text" id="usernameInput" placeholder="Adını gir..." maxlength="20">
                 </div>
 
                 <div class="input-group">
-                    <label>Video Linki</label>
+                    <label>Url</label>
                     <input type="text" id="videoUrl" placeholder="YouTube URL veya direkt iframe URL (vidrame.pro/vr/...)">
                 </div>
 
@@ -38,7 +37,6 @@
             </div>
         </div>
 
-        <!-- Watch Screen -->
         <div class="watch-screen" id="watchScreen">
             <div class="main-content">
                 <div class="room-header">
@@ -48,17 +46,17 @@
                     </div>
                     <div class="status-badge disconnected" id="statusBadge">
                         <span class="status-dot"></span>
-                        <span id="statusText">Bağlanıyor...</span>
+                        <span id="statusText">Bağlanıyor</span>
                     </div>
                 </div>
 
                 <div class="video-container" id="playerContainer"></div>
 
                 <div class="controls">
-                    <button class="btn-primary" onclick="_0x4a2b.syncPlay()">Oynat</button>
-                    <button class="btn-primary" onclick="_0x4a2b.syncPause()">Duraklat</button>
-                    <button class="btn-primary" onclick="_0x4a2b.syncRestart()">Başa Sar</button>
-                    <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Çık</button>
+                    <button class="btn-primary" onclick="_0x4a2b.syncPlay()">oynat</button>
+                    <button class="btn-primary" onclick="_0x4a2b.syncPause()">duraklat</button>
+                    <button class="btn-primary" onclick="_0x4a2b.syncRestart()">başa sar</button>
+                    <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">çık</button>
                 </div>
             </div>
 
@@ -69,11 +67,11 @@
                 </div>
 
                 <div class="sidebar-card">
-                    <h3>Chat</h3>
+                    <h3>Sohbet</h3>
                     <div class="chat-container">
                         <div class="chat-messages" id="chatMessages"></div>
                         <div class="chat-input-group">
-                            <input type="text" id="chatInput" placeholder="Mesaj yaz..." maxlength="200">
+                            <input type="text" id="chatInput" placeholder="Mesaj gönder.." maxlength="200">
                             <button class="btn-primary" onclick="_0x4a2b.sendMessage()">Gönder</button>
                         </div>
                     </div>
