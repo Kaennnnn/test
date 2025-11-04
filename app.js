@@ -2,6 +2,7 @@ const _0x4a2b = (() => {
     let _0x1a, _0x1b, _0x1c, _0x1d = false, _0x1e = '', _0x1f, _0x20;
     let isIframePlayer = false;
     let lastStateUpdate = 0;
+    let iframeElement = null;
 
     const _0x5e8a = () => {
         return 'user_' + Math.random().toString(36).substring(2, 15);
@@ -12,6 +13,61 @@ const _0x4a2b = (() => {
     };
 
     _0x1f = _0x5e8a();
+
+    // İFRAME OVERLAY SİSTEMİ (iframe'i silmeden gizle/göster)
+    const showPauseOverlay = () => {
+        let overlay = document.getElementById('pauseOverlay');
+        if (!overlay) {
+            const container = document.getElementById('playerContainer');
+            overlay = document.createElement('div');
+            overlay.id = 'pauseOverlay';
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                gap: 20px;
+                border-radius: 16px;
+            `;
+            overlay.innerHTML = `
+                <div style="font-size: 5em; color: rgba(255,255,255,0.3); animation: pausePulse 2s infinite;">⏸</div>
+                <div style="color: white; font-size: 1.8em; font-weight: 700;">Video Duraklatıldı</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 1.1em;">HOST devam ettirdiğinde otomatik başlayacak</div>
+            `;
+            container.appendChild(overlay);
+            
+            // Animasyon ekle
+            if (!document.getElementById('pause-animation')) {
+                const style = document.createElement('style');
+                style.id = 'pause-animation';
+                style.textContent = `
+                    @keyframes pausePulse {
+                        0%, 100% { opacity: 0.3; transform: scale(1); }
+                        50% { opacity: 0.6; transform: scale(1.1); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        overlay.style.display = 'flex';
+        console.log('Duraklama overlay gösterildi');
+    };
+
+    const hidePauseOverlay = () => {
+        const overlay = document.getElementById('pauseOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+        console.log('Duraklama overlay gizlendi');
+    };
 
     const createNameChangeModal = () => {
         const modalHTML = `
@@ -87,14 +143,25 @@ const _0x4a2b = (() => {
     const updateControlButtons = () => {
         const controlsDiv = document.querySelector('.controls');
         
-        controlsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
-            <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
-        `;
+        if (isIframePlayer && _0x1c) {
+            // İframe HOST kontrolleri
+            controlsDiv.innerHTML = `
+                <button class="btn-primary" onclick="_0x4a2b.syncPlay()" style="background: linear-gradient(135deg, #10b981, #059669);">▶ Oynat</button>
+                <button class="btn-primary" onclick="_0x4a2b.syncPause()" style="background: linear-gradient(135deg, #f59e0b, #d97706);">⏸ Duraklat</button>
+                <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
+                <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
+            `;
+        } else {
+            // Normal kontroller
+            controlsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
+                <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
+            `;
+        }
     };
 
     const addVideoBlocker = () => {
-        if (!_0x1c) {
+        if (!_0x1c && !isIframePlayer) {
             const blocker = document.createElement('div');
             blocker.id = 'videoBlocker';
             blocker.style.cssText = `
@@ -164,7 +231,7 @@ const _0x4a2b = (() => {
                 videoType: _0x4b.type,
                 videoId: _0x4b.id || '',
                 videoUrl: _0x4b.url || '',
-                state: 'paused',
+                state: 'playing',
                 time: 0,
                 timestamp: Date.now()
             });
@@ -236,6 +303,7 @@ const _0x4a2b = (() => {
 
         const _0x6c = document.getElementById('playerContainer');
         _0x6c.innerHTML = '';
+        _0x6c.style.position = 'relative';
 
         if (_0x6a.type === 'youtube') {
             isIframePlayer = false;
@@ -288,18 +356,7 @@ const _0x4a2b = (() => {
             };
             
             _0x6c.appendChild(_0x6e);
-
-            setTimeout(() => {
-                addVideoBlocker();
-                
-                // Iframe için durum takibi
-                if (_0x1c) {
-                    // Host için periyodik kontrol
-                    setInterval(() => {
-                        _0x20.ref('rooms/' + _0x1b + '/lastPing').set(Date.now());
-                    }, 2000);
-                }
-            }, 500);
+            iframeElement = _0x6e;
 
             _0x1a = {
                 iframe: _0x6e,
@@ -317,7 +374,7 @@ const _0x4a2b = (() => {
         if (_0x1d || !_0x1c) return;
 
         const now = Date.now();
-        if (now - lastStateUpdate < 300) return; // Debounce
+        if (now - lastStateUpdate < 300) return;
         lastStateUpdate = now;
 
         const _0x8b = _0x8a.data === YT.PlayerState.PLAYING ? 'playing' : 
@@ -336,6 +393,29 @@ const _0x4a2b = (() => {
         });
     };
 
+    // MANUEL KONTROLLER (İframe HOST için)
+    const syncPlay = () => {
+        if (!_0x1c || !isIframePlayer) return;
+
+        _0x20.ref('rooms/' + _0x1b).update({
+            state: 'playing',
+            timestamp: Date.now()
+        });
+
+        console.log('Oynatma komutu gönderildi');
+    };
+
+    const syncPause = () => {
+        if (!_0x1c || !isIframePlayer) return;
+
+        _0x20.ref('rooms/' + _0x1b).update({
+            state: 'paused',
+            timestamp: Date.now()
+        });
+
+        console.log('Duraklama komutu gönderildi');
+    };
+
     const _0xa07b = () => {
         _0x20.ref('rooms/' + _0x1b).on('value', (_0x9a) => {
             if (!_0x9a.exists()) return;
@@ -343,7 +423,7 @@ const _0x4a2b = (() => {
 
             console.log('Oda durumu güncellendi:', _0x9b);
 
-            // YouTube için senkronizasyon
+            // YouTube için otomatik senkronizasyon
             if (!isIframePlayer && !_0x1c && _0x1a && _0x1a.seekTo && typeof _0x1a.getCurrentTime === 'function') {
                 _0x1d = true;
                 
@@ -377,20 +457,12 @@ const _0x4a2b = (() => {
                 setTimeout(() => { _0x1d = false; }, 500);
             }
             
-            // Iframe için bildirim (host değilse)
+            // İframe için overlay sistemi (HOST değilse)
             if (isIframePlayer && !_0x1c) {
-                // Sadece durum değişikliklerinde bildirim
-                const prevState = window._lastIframeState || '';
-                if (prevState !== _0x9b.state) {
-                    window._lastIframeState = _0x9b.state;
-                    // İlk yükleme değilse bildirim göster
-                    if (prevState !== '') {
-                        if (_0x9b.state === 'playing') {
-                            console.log('HOST videoyu başlattı');
-                        } else if (_0x9b.state === 'paused') {
-                            console.log('HOST videoyu duraklattı');
-                        }
-                    }
+                if (_0x9b.state === 'paused') {
+                    showPauseOverlay();
+                } else if (_0x9b.state === 'playing') {
+                    hidePauseOverlay();
                 }
             }
         });
@@ -549,6 +621,8 @@ const _0x4a2b = (() => {
         changeName: _0x1849,
         confirmNameChange: _0x195a,
         cancelNameChange: _0x1a6b,
-        leaveRoom: _0x1738
+        leaveRoom: _0x1738,
+        syncPlay: syncPlay,
+        syncPause: syncPause
     };
 })();
