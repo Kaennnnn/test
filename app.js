@@ -504,19 +504,28 @@ const _0x10d2 = (_0xaa) => {
     };
 
     const _0x11e3 = (_0xda) => {
-        const _0xdb = document.getElementById('chatMessages');
-        const _0xdc = document.createElement('div');
-        _0xdc.className = 'chat-message' + (_0xda.type === 'system' ? ' system' : '');
+    const _0xdb = document.getElementById('chatMessages');
+    const _0xdb_mobile = document.getElementById('mobileChatMessages');
+    
+    const _0xdc = document.createElement('div');
+    _0xdc.className = 'chat-message' + (_0xda.type === 'system' ? ' system' : '');
 
-        if (_0xda.type === 'system') {
-            _0xdc.textContent = _0xda.message;
-        } else {
-            _0xdc.innerHTML = `<span class="username">${_0xda.username}:</span>${_0xda.message}`;
-        }
+    if (_0xda.type === 'system') {
+        _0xdc.textContent = _0xda.message;
+    } else {
+        _0xdc.innerHTML = `<span class="username">${_0xda.username}:</span>${_0xda.message}`;
+    }
 
-        _0xdb.appendChild(_0xdc);
-        _0xdb.scrollTop = _0xdb.scrollHeight;
-    };
+    _0xdb.appendChild(_0xdc);
+    _0xdb.scrollTop = _0xdb.scrollHeight;
+    
+    // Mobil chat'e de ekle
+    if (_0xdb_mobile) {
+        const mobileMsgClone = _0xdc.cloneNode(true);
+        _0xdb_mobile.appendChild(mobileMsgClone);
+        _0xdb_mobile.scrollTop = _0xdb_mobile.scrollHeight;
+    }
+};
 
     const _0x1849 = () => {
         const modal = document.getElementById('nameChangeModal');
@@ -665,17 +674,50 @@ const _0x10d2 = (_0xaa) => {
             }
         });
     });
+    const _0x2b7c = () => {
+    const panel = document.getElementById('mobileChatPanel');
+    panel.classList.toggle('open');
+};
 
-    return {
-        createRoom: _0x7d4e,
-        joinRoom: _0xb18c,
-        sendMessage: _0x12f4,
-        changeName: _0x1849,
-        confirmNameChange: _0x195a,
-        cancelNameChange: _0x1a6b,
-        leaveRoom: _0x1738,
-        changeVideo: _0x2a4f,
-        confirmVideoChange: _0x3b5g,
-        cancelVideoChange: _0x4c6h
+const _0x3c8d = () => {
+    const input = document.getElementById('mobileChatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    const msgData = {
+        userId: _0x1f,
+        username: _0x1e,
+        message: message,
+        timestamp: Date.now(),
+        type: 'user'
     };
+
+    _0x20.ref('rooms/' + _0x1b + '/chat').push(msgData);
+    input.value = '';
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const mobileInput = document.getElementById('mobileChatInput');
+    if (mobileInput) {
+        mobileInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                _0x3c8d();
+            }
+        });
+    }
+});
+    return {
+    createRoom: _0x7d4e,
+    joinRoom: _0xb18c,
+    sendMessage: _0x12f4,
+    changeName: _0x1849,
+    confirmNameChange: _0x195a,
+    cancelNameChange: _0x1a6b,
+    leaveRoom: _0x1738,
+    changeVideo: _0x2a4f,
+    confirmVideoChange: _0x3b5g,
+    cancelVideoChange: _0x4c6h,
+    toggleMobileChat: _0x2b7c,
+    sendMobileMessage: _0x3c8d
+};
 })();
