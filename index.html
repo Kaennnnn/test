@@ -490,7 +490,7 @@
 
                 <div class="input-group">
                     <label>Video Linki</label>
-                    <input type="text" id="videoUrl" placeholder="URL girin (YouTube, HDFilmizle, Dizipal vb.)">
+                    <input type="text" id="videoUrl" placeholder="YouTube URL veya direkt iframe URL (vidrame.pro/vr/...)">
                 </div>
 
                 <button class="btn-primary" onclick="createRoom()">Oda Oluştur</button>
@@ -576,54 +576,39 @@
         let userId = generateUserId();
 
         function extractVideoInfo(url) {
+            // Direkt iframe URL'leri (Vidrame, vb)
+            if (url.includes('vidrame.pro') || url.includes('filemoon') || url.includes('doodstream')) {
+                return { type: 'iframe', url: url };
+            }
+
             // YouTube
             let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
             if (match) {
                 return { type: 'youtube', id: match[1] };
             }
 
-            // Vidrame
+            // Vidrame ID ile
             match = url.match(/vidrame\.pro\/vr\/(\d+)/);
             if (match) {
-                return { type: 'vidrame', id: match[1], url: url };
+                return { type: 'iframe', url: `https://vidrame.pro/vr/${match[1]}?ap=1` };
             }
 
-            // HDFilmizle, Dizipal vb. - iframe içeren siteler
+            // Genel iframe URL (herhangi bir embed)
+            if (url.includes('embed') || url.includes('/e/') || url.includes('/v/')) {
+                return { type: 'iframe', url: url };
+            }
+
+            // Site URL'leri - Manuel iframe URL isteyeceğiz
             if (url.includes('hdfilmizle') || url.includes('dizipal') || url.includes('dizigom')) {
-                return { type: 'external', url: url };
+                return { type: 'needs_iframe', originalUrl: url };
             }
 
             return null;
         }
 
         async function fetchVideoFromURL(url) {
-            try {
-                // CORS proxy kullanarak sayfayı çek
-                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-                const response = await fetch(proxyUrl);
-                const html = await response.text();
-                
-                // iframe src'sini bul
-                const iframeMatch = html.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-                if (iframeMatch && iframeMatch[1]) {
-                    let iframeSrc = iframeMatch[1];
-                    
-                    // Relative URL'i düzelt
-                    if (iframeSrc.startsWith('//')) {
-                        iframeSrc = 'https:' + iframeSrc;
-                    } else if (iframeSrc.startsWith('/')) {
-                        const urlObj = new URL(url);
-                        iframeSrc = urlObj.origin + iframeSrc;
-                    }
-                    
-                    return { type: 'iframe', url: iframeSrc };
-                }
-                
-                return null;
-            } catch (error) {
-                console.error('Video çekme hatası:', error);
-                return null;
-            }
+            // Bu fonksiyon artık kullanılmıyor ama tutuyoruz
+            return null;
         }
 
         async function createRoom() {
@@ -636,22 +621,29 @@
             const videoUrl = document.getElementById('videoUrl').value;
             let videoInfo = extractVideoInfo(videoUrl);
 
-            // Eğer external site ise, iframe'i çekmeyi dene
-            if (videoInfo && videoInfo.type === 'external') {
-                updateStatus('Video yükleniyor...', false);
-                const fetchedInfo = await fetchVideoFromURL(videoInfo.url);
-                if (fetchedInfo) {
-                    videoInfo = fetchedInfo;
-                } else {
-                    alert('Bu siteden video çekilemedi. Lütfen başka bir link dene.');
-                    updateStatus('Bağlantı kesildi', false);
-                    return;
-                }
+            if (!videoInfo) {
+                alert('Geçerli bir video URL\'si girin!\n\nDesteklenen formatlar:\n- YouTube: https://youtube.com/watch?v=...\n- Vidrame: https://vidrame.pro/vr/12345\n- Direkt iframe URL\'si');
+                return;
             }
 
-            if (!videoInfo) {
-                alert('Geçerli bir video linki girin! (YouTube, HDFilmizle, Dizipal vb.)');
-                return;
+            // Eğer site URL'si verilmişse, iframe URL'si iste
+            if (videoInfo.type === 'needs_iframe') {
+                const iframeUrl = prompt(
+                    '❌ Bu siteden otomatik video çekme desteklenmiyor.\n\n' +
+                    '✅ Çözüm: Videonun IFRAME URL\'sini yapıştırın\n\n' +
+                    'Nasıl bulunur?\n' +
+                    '1. Sayfada sağ tıkla → Öğeyi İncele\n' +
+                    '2. <iframe src="..."> içindeki URL\'yi kopyala\n' +
+                    '3. Buraya yapıştır\n\n' +
+                    'Örnek: https://vidrame.pro/vr/57346267\n\n' +
+                    'İframe URL:'
+                );
+                
+                if (!iframeUrl) {
+                    return;
+                }
+                
+                videoInfo = { type: 'iframe', url: iframeUrl };
             }
 
             currentRoom = generateRoomCode();
@@ -723,6 +715,7 @@
             document.getElementById('displayRoomCode').textContent = currentRoom;
 
             const container = document.getElementById('playerContainer');
+            container.innerHTML = ''; // Temizle
 
             if (videoInfo.type === 'youtube') {
                 const playerDiv = document.createElement('div');
@@ -739,28 +732,30 @@
                         'onStateChange': onPlayerStateChange
                     }
                 });
-            } else if (videoInfo.type === 'vidrame' || videoInfo.type === 'iframe') {
+            } else if (videoInfo.type === 'iframe') {
                 const iframe = document.createElement('iframe');
                 let src = videoInfo.url;
                 
-                // Vidrame için autoplay parametresi ekle
-                if (videoInfo.type === 'vidrame') {
+                // Autoplay parametresi ekle (varsa)
+                if (!src.includes('ap=') && !src.includes('autoplay=')) {
                     src += (src.includes('?') ? '&' : '?') + 'ap=1';
                 }
                 
                 iframe.src = src;
-                iframe.width = '100%';
-                iframe.height = '100%';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
                 iframe.frameBorder = '0';
                 iframe.scrolling = 'no';
                 iframe.allowFullscreen = true;
                 iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+                
                 container.appendChild(iframe);
 
                 setTimeout(() => {
                     updateStatus('Bağlandı', true);
-                    sendSystemMessage('Video oynatıcı yüklendi');
-                }, 1000);
+                    sendSystemMessage('Video oynatıcı yüklendi ✓');
+                }, 1500);
             }
         }
 
