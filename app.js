@@ -106,9 +106,8 @@ const _0x4a2b = (() => {
         const controlsDiv = document.querySelector('.controls');
         
         if (_0x1c) {
-            // HOST için video değiştir butonu da ekle
             controlsDiv.innerHTML = `
-                <button class="btn-primary" onclick="_0x4a2b.changeVideo()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🎬 Video Değiştir</button>
+                <button class="btn-primary" onclick="_0x4a2b.changeVideo()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Video Değiştir</button>
                 <button class="btn-secondary" onclick="_0x4a2b.changeName()">İsim Değiştir</button>
                 <button class="btn-leave" onclick="_0x4a2b.leaveRoom()">Odadan Çık</button>
             `;
@@ -341,7 +340,6 @@ const _0x4a2b = (() => {
         
         if (!_0x8b) return;
 
-        // Eğer durum gerçekten değiştiyse kaydet
         if (_0x8b !== lastKnownState) {
             lastKnownState = _0x8b;
             const _0x8c = _0x1a.getCurrentTime();
@@ -370,7 +368,6 @@ const _0x4a2b = (() => {
             if (!_0x9a.exists()) return;
             const _0x9b = _0x9a.val();
 
-            // Video değişti mi kontrol et
             const currentVideoId = _0x9b.videoId || _0x9b.videoUrl || '';
             if (lastVideoId && lastVideoId !== currentVideoId) {
                 console.log('Video değişti, sayfa yenileniyor...');
@@ -381,10 +378,8 @@ const _0x4a2b = (() => {
 
             console.log('Oda durumu güncellendi:', _0x9b);
 
-            // YouTube için senkronizasyon (sadece izleyenler)
             if (!isIframePlayer && !_0x1c && _0x1a && _0x1a.seekTo && typeof _0x1a.getCurrentTime === 'function') {
                 
-                // Versiyon kontrolü - sadece yeni değişiklikler için çalış
                 const currentVersion = _0x9b.stateVersion || 0;
                 if (currentVersion <= lastSeenVersion) {
                     return;
@@ -398,7 +393,7 @@ const _0x4a2b = (() => {
                 const timeDiff = Math.abs(currentTime - targetTime);
                 const currentPlayerState = _0x1a.getPlayerState();
                 
-                console.log('🔄 Senkronizasyon:', {
+                console.log('Senkronizasyon:', {
                     hedefDurum: _0x9b.state,
                     hedefZaman: targetTime,
                     mevcutZaman: currentTime,
@@ -407,29 +402,25 @@ const _0x4a2b = (() => {
                 });
                 
                 if (_0x9b.state === 'playing') {
-                    // Önce zamanı ayarla
                     if (timeDiff > 2) {
-                        console.log('⏩ Zaman atlanıyor:', targetTime);
+                        console.log('Zaman atlanıyor:', targetTime);
                         _0x1a.seekTo(targetTime, true);
                     }
                     
-                    // Sonra oynat
                     if (currentPlayerState !== YT.PlayerState.PLAYING && 
                         currentPlayerState !== YT.PlayerState.BUFFERING) {
-                        console.log('▶️ Video başlatılıyor');
+                        console.log('Video başlatılıyor');
                         _0x1a.playVideo();
                     }
                 } else if (_0x9b.state === 'paused') {
-                    // Önce durdur
                     if (currentPlayerState === YT.PlayerState.PLAYING || 
                         currentPlayerState === YT.PlayerState.BUFFERING) {
-                        console.log('⏸️ Video duraklatılıyor');
+                        console.log('Video duraklatılıyor');
                         _0x1a.pauseVideo();
                     }
                     
-                    // Sonra zamanı ayarla
                     if (timeDiff > 0.5) {
-                        console.log('⏱️ Duraklama zamanı ayarlanıyor:', targetTime);
+                        console.log('Duraklama zamanı ayarlanıyor:', targetTime);
                         _0x1a.seekTo(targetTime, true);
                     }
                 }
@@ -612,7 +603,6 @@ const _0x4a2b = (() => {
         }
 
         try {
-            // Firebase'de videoyu güncelle
             await _0x20.ref('rooms/' + _0x1b).update({
                 videoType: videoInfo.type,
                 videoId: videoInfo.id || '',
